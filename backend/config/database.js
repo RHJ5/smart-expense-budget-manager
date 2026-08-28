@@ -12,8 +12,10 @@ const sequelize = new Sequelize(
       options: {
         encrypt: false, // set true if using Azure SQL later
         trustServerCertificate: true, // needed for local dev without a real SSL cert
+        useUTC: false,   
       },
     },
+     timezone: '+00:00',  
     logging: console.log, // shows generated SQL in terminal — helpful while learning, we'll turn this off later
   }
 );
