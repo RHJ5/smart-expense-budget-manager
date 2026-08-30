@@ -4,6 +4,7 @@ const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
 const transactionRoutes = require('./routes/transactionRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
+const budgetRoutes = require('./routes/budgetRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
@@ -18,6 +19,7 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/categories', categoryRoutes);
+app.use('/api/budgets', budgetRoutes);
 
 app.get('/api/protected-test', authMiddleware, (req, res) => {
   res.json({ message: 'Aap authenticated hain!', userId: req.userId });
