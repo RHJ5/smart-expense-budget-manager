@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const sequelize = require('./config/database');
 const authRoutes = require('./routes/authRoutes');
+const transactionRoutes = require('./routes/transactionRoutes');
 const authMiddleware = require('./middleware/authMiddleware');
 
 const app = express();
@@ -14,6 +15,7 @@ app.get('/', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/transactions', transactionRoutes);
 
 app.get('/api/protected-test', authMiddleware, (req, res) => {
   res.json({ message: 'Aap authenticated hain!', userId: req.userId });
