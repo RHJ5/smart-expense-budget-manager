@@ -23,17 +23,43 @@ async function createTransaction(req, res) {
 }
 async function getTransactions(req, res) {
   try {
-    const transactions = await Transaction.findAll({
-      where: { userId: req.userId },
-      order: [['date', 'DESC']],
+    const { type, categoryId, startDate, endDate, sortBy, page, limit } = req.query;
+
+    const where = { userId: req.userId };
+
+    if (type) where.type = type;
+    if (categoryId) where.categoryId = categoryId;
+
+    if (startDate && endDate) {
+      where.date = { [Op.between]: [startDate, endDate] };
+    }
+
+    const currentPage = parseInt(page) || 1;
+    const pageSize = parseInt(limit) || 10;
+    const offset = (currentPage - 1) * pageSize;
+
+    let order = [['date', 'DESC']];
+    if (sortBy === 'oldest') order = [['date', 'ASC']];
+    if (sortBy === 'highest') order = [['amount', 'DESC']];
+    if (sortBy === 'lowest') order = [['amount', 'ASC']];
+
+    const { count, rows } = await Transaction.findAndCountAll({
+      where,
+      order,
+      limit: pageSize,
+      offset,
     });
 
-    res.status(200).json({ transactions });
+    res.status(200).json({
+      transactions: rows,
+      totalCount: count,
+      currentPage,
+      totalPages: Math.ceil(count / pageSize),
+    });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
-
 async function getTransactionById(req, res) {
   try {
     const transaction = await Transaction.findOne({
