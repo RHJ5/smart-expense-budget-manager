@@ -2,27 +2,20 @@ const { Op } = require('sequelize');
 const Budget = require('../models/Budget');
 const Transaction = require('../models/Transaction');
 
-function getMonthDateRange(period) {
-  const [year, month] = period.split('-');
-  const startDate = `${year}-${month}-01`;
-  const lastDay = new Date(year, month, 0).getDate();
-  const endDate = `${year}-${month}-${lastDay}`;
-  return { startDate, endDate };
-}
-
 async function createBudget(req, res) {
   try {
-    const { categoryId, amount, period } = req.body;
+    const { categoryId, amount, startDate, endDate } = req.body;
 
     const newBudget = await Budget.create({
       userId: req.userId,
       categoryId,
       amount,
-      period,
+      startDate,
+      endDate,
     });
 
     res.status(201).json({
-      message: 'Budget ban gaya',
+      message: 'Budget created successfully',
       budget: newBudget,
     });
   } catch (error) {
@@ -34,18 +27,17 @@ async function getBudgets(req, res) {
   try {
     const budgets = await Budget.findAll({
       where: { userId: req.userId },
+      order: [['startDate', 'DESC']],
     });
 
     const budgetsWithSpending = await Promise.all(
       budgets.map(async (budget) => {
-        const { startDate, endDate } = getMonthDateRange(budget.period);
-
         const spent = await Transaction.sum('amount', {
           where: {
             userId: req.userId,
             categoryId: budget.categoryId,
             type: 'expense',
-            date: { [Op.between]: [startDate, endDate] },
+            date: { [Op.between]: [budget.startDate, budget.endDate] },
           },
         }) || 0;
 
@@ -60,7 +52,8 @@ async function getBudgets(req, res) {
           id: budget.id,
           categoryId: budget.categoryId,
           amount: budget.amount,
-          period: budget.period,
+          startDate: budget.startDate,
+          endDate: budget.endDate,
           spent,
           remaining,
           percentageUsed: Math.round(percentageUsed),
@@ -68,22 +61,22 @@ async function getBudgets(req, res) {
         };
       })
     );
-    
 
     res.status(200).json({ budgets: budgetsWithSpending });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+
 async function updateBudget(req, res) {
   try {
     const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.userId } });
-    if (!budget) return res.status(404).json({ message: 'Budget nahi mila' });
+    if (!budget) return res.status(404).json({ message: 'Budget not found' });
 
-    const { categoryId, amount, period } = req.body;
-    await budget.update({ categoryId, amount, period });
+    const { categoryId, amount, startDate, endDate } = req.body;
+    await budget.update({ categoryId, amount, startDate, endDate });
 
-    res.status(200).json({ message: 'Budget update ho gaya', budget });
+    res.status(200).json({ message: 'Budget updated successfully', budget });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -92,10 +85,10 @@ async function updateBudget(req, res) {
 async function deleteBudget(req, res) {
   try {
     const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.userId } });
-    if (!budget) return res.status(404).json({ message: 'Budget nahi mila' });
+    if (!budget) return res.status(404).json({ message: 'Budget not found' });
 
     await budget.destroy();
-    res.status(200).json({ message: 'Budget delete ho gaya' });
+    res.status(200).json({ message: 'Budget deleted successfully' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
