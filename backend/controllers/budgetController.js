@@ -68,11 +68,37 @@ async function getBudgets(req, res) {
         };
       })
     );
+    
 
     res.status(200).json({ budgets: budgetsWithSpending });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 }
+async function updateBudget(req, res) {
+  try {
+    const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.userId } });
+    if (!budget) return res.status(404).json({ message: 'Budget nahi mila' });
 
-module.exports = { getBudgets, createBudget };
+    const { categoryId, amount, period } = req.body;
+    await budget.update({ categoryId, amount, period });
+
+    res.status(200).json({ message: 'Budget update ho gaya', budget });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+async function deleteBudget(req, res) {
+  try {
+    const budget = await Budget.findOne({ where: { id: req.params.id, userId: req.userId } });
+    if (!budget) return res.status(404).json({ message: 'Budget nahi mila' });
+
+    await budget.destroy();
+    res.status(200).json({ message: 'Budget delete ho gaya' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
+
+module.exports = { getBudgets, createBudget, updateBudget, deleteBudget };
