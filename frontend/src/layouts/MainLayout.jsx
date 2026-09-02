@@ -1,13 +1,14 @@
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { Home, Receipt, Wallet, BarChart3, Target, FileText, Settings, LogOut, PiggyBank } from 'lucide-react';
+import { Home, Receipt, Wallet, BarChart3, User } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', path: '/dashboard', icon: Home },
   { name: 'Transactions', path: '/transactions', icon: Receipt },
   { name: 'Budgets', path: '/budgets', icon: Wallet },
   { name: 'Analytics', path: '/analytics', icon: BarChart3 },
+  { name: 'Profile', path: '/profile', icon: User },
 ];
-
 function MainLayout() {
   const navigate = useNavigate();
   const location = useLocation();
