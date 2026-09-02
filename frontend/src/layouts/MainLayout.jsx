@@ -1,6 +1,5 @@
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
-import { Home, Receipt, Wallet, BarChart3, Target, FileText, Settings, LogOut, PiggyBank } from 'lucide-react';
-import { Home, Receipt, Wallet, BarChart3, User } from 'lucide-react';
+import { Home, Receipt, Wallet, BarChart3,User, Target, FileText, Settings, LogOut, PiggyBank } from 'lucide-react';
 
 const navItems = [
   { name: 'Home', path: '/dashboard', icon: Home },
