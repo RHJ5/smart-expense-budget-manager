@@ -28,6 +28,32 @@ async function getExpenseByCategory(req, res) {
   }
 }
 
+async function getIncomeByCategory(req, res) {
+  try {
+    const now = new Date();
+    const currentPeriod = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const startDate = `${currentPeriod}-01`;
+    const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+    const endDate = `${currentPeriod}-${lastDay}`;
+
+    const incomeByCategory = await Transaction.findAll({
+      attributes: [
+        'categoryId',
+        [fn('SUM', col('amount')), 'total'],
+      ],
+      where: {
+        userId: req.userId,
+        type: 'income',
+        date: { [Op.between]: [startDate, endDate] },
+      },
+      group: ['categoryId'],
+    });
+
+    res.status(200).json({ incomeByCategory });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+}
 async function getMonthlyTrend(req, res) {
   try {
     const sixMonthsAgo = new Date();
@@ -64,5 +90,4 @@ async function getMonthlyTrend(req, res) {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-}
-module.exports = { getExpenseByCategory, getMonthlyTrend };
+}module.exports = { getExpenseByCategory, getMonthlyTrend, getIncomeByCategory };

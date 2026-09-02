@@ -5,6 +5,7 @@ import api from '../services/api';
 function TransactionsPage() {
   const [transactions, setTransactions] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [budgets, setBudgets] = useState([]);
   const [error, setError] = useState('');
 
   const [categoryId, setCategoryId] = useState('');
@@ -31,9 +32,19 @@ function TransactionsPage() {
     }
   };
 
+  const fetchBudgetsList = async () => {
+    try {
+      const response = await api.get('/budgets');
+      setBudgets(response.data.budgets);
+    } catch (err) {
+      console.error('Failed to load budgets');
+    }
+  };
+
   useEffect(() => {
     fetchTransactions();
     fetchCategories();
+    fetchBudgetsList();
   }, []);
 
   const getCategoryName = (id) => {
@@ -41,15 +52,33 @@ function TransactionsPage() {
     return cat ? cat.name : 'Other';
   };
 
+  const getCategoryNameForForm = (id) => {
+    const cat = categories.find((c) => c.id === parseInt(id));
+    return cat ? cat.name : 'this category';
+  };
+
   const handleAddTransaction = async (e) => {
     e.preventDefault();
     try {
       await api.post('/transactions', { categoryId, type, amount, description, date });
+
+      if (type === 'expense') {
+        const hasBudget = budgets.some((b) => b.categoryId === parseInt(categoryId));
+        if (!hasBudget) {
+          setError(`Note: "${getCategoryNameForForm(categoryId)}" has no budget set for tracking.`);
+        } else {
+          setError('');
+        }
+      } else {
+        setError('');
+      }
+
       setCategoryId('');
       setAmount('');
       setDescription('');
       setDate('');
       fetchTransactions();
+      fetchBudgetsList();
     } catch (err) {
       setError('Failed to add transaction');
     }
@@ -70,30 +99,26 @@ function TransactionsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary">Transactions</h1>
-        <p className="text-text-secondary text-sm mt-1">Manage all your income and expenses here.</p>
+        <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Transactions</h1>
+        <p className="text-text-secondary text-sm mt-1 font-medium">Manage all your income and expenses here.</p>
       </div>
 
-      {error && <p className="text-expense text-sm mb-4">{error}</p>}
+      {error && <p className="text-warning text-sm mb-4 bg-warning/10 px-4 py-2 rounded-xl">{error}</p>}
 
       <div className="bg-white rounded-2xl border border-border-slate p-6 mb-6 card-hover">
-        <h3 className="font-semibold text-text-primary mb-4">Add Transaction</h3>
+        <h3 className="font-bold text-text-primary mb-4">Add Transaction</h3>
         <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-5 gap-3">
-          <div className="relative">
-            <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required className={selectClass + " w-full"}>
-              <option value="">Category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>{cat.name}</option>
-              ))}
-            </select>
-          </div>
+          <select value={categoryId} onChange={(e) => setCategoryId(e.target.value)} required className={selectClass + " w-full"}>
+            <option value="">Category</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>{cat.name}</option>
+            ))}
+          </select>
 
-          <div className="relative">
-            <select value={type} onChange={(e) => setType(e.target.value)} className={selectClass + " w-full"}>
-              <option value="expense">Expense</option>
-              <option value="income">Income</option>
-            </select>
-          </div>
+          <select value={type} onChange={(e) => setType(e.target.value)} className={selectClass + " w-full"}>
+            <option value="expense">Expense</option>
+            <option value="income">Income</option>
+          </select>
 
           <input type="number" placeholder="Amount" value={amount} onChange={(e) => setAmount(e.target.value)} required className={inputClass} />
           <input type="text" placeholder="Description" value={description} onChange={(e) => setDescription(e.target.value)} className={inputClass} />
@@ -108,7 +133,7 @@ function TransactionsPage() {
       <div className="bg-white rounded-2xl border border-border-slate p-6 card-hover">
         <h3 className="font-semibold text-text-primary mb-4">All Transactions</h3>
         {transactions.length === 0 ? (
-          <p className="text-text-muted text-sm">No transactions found</p>
+          <p className="text-text-secondary text-sm mt-1 font-medium">No Transaction Found</p>
         ) : (
           <table className="w-full text-left">
             <thead>

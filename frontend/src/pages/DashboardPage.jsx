@@ -15,27 +15,29 @@ function DashboardPage() {
   const [insights, setInsights] = useState([]);
   const [categories, setCategories] = useState([]);
   const [expenseByCategory, setExpenseByCategory] = useState([]);
+  const [incomeByCategory, setIncomeByCategory] = useState([]);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const fetchAll = async () => {
-      try {
-        const [summaryRes, insightsRes, catRes, expenseCatRes] = await Promise.all([
-          api.get('/dashboard/summary'),
-          api.get('/insights'),
-          api.get('/categories'),
-          api.get('/analytics/expense-by-category'),
-        ]);
-        setSummary(summaryRes.data);
-        setInsights(insightsRes.data.insights);
-        setCategories(catRes.data.categories);
-        setExpenseByCategory(expenseCatRes.data.expenseByCategory);
-      } catch (err) {
-        setError('Data load nahi ho saka');
-      }
-    };
-    fetchAll();
-  }, []);
+useEffect(() => {
+  const fetchAll = async () => {
+    try {
+      const [summaryRes, insightsRes, catRes, expenseCatRes, incomeCatRes] = await Promise.all([
+        api.get('/dashboard/summary'),
+        api.get('/insights'),
+        api.get('/categories'),
+        api.get('/analytics/expense-by-category'),
+        api.get('/analytics/income-by-category'),
+      ]);
+      setSummary(summaryRes.data);
+      setInsights(insightsRes.data.insights);
+      setCategories(catRes.data.categories);
+      setExpenseByCategory(expenseCatRes.data.expenseByCategory);
+      setIncomeByCategory(incomeCatRes.data.incomeByCategory);
+    } catch (err) {
+      setError('Data load nahi ho saka');
+    }
+  };
+  fetchAll();
+}, []);
 
   const getCategoryName = (id) => {
     const cat = categories.find((c) => c.id === id);
@@ -57,12 +59,19 @@ function DashboardPage() {
       percent: totalSpend > 0 ? Math.round((parseFloat(c.total) / totalSpend) * 100) : 0,
     }))
     .sort((a, b) => b.amount - a.amount);
-
+const totalIncome = incomeByCategory.reduce((sum, c) => sum + parseFloat(c.total), 0);
+const incomeBreakdown = incomeByCategory
+  .map((c) => ({
+    name: getCategoryName(c.categoryId),
+    amount: parseFloat(c.total),
+    percent: totalIncome > 0 ? Math.round((parseFloat(c.total) / totalIncome) * 100) : 0,
+  }))
+  .sort((a, b) => b.amount - a.amount);
   return (
     <div>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h1 className="text-3xl font-bold text-text-primary">Welcome Back</h1>
+          <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Welcome Back</h1>
           <p className="text-text-secondary text-sm mt-1">Here's your financial overview for this month.</p>
         </div>
         <div className="flex items-center gap-2 bg-white border border-border-slate rounded-xl px-4 py-2.5 text-sm text-text-secondary">
@@ -175,7 +184,29 @@ function DashboardPage() {
               })}
             </div>
           </div>
-
+{incomeBreakdown.length > 0 && (
+  <div className="bg-white rounded-2xl border border-border-slate p-6 card-hover">
+    <h3 className="font-bold text-text-primary mb-4">Income Breakdown</h3>
+    <div className="space-y-4">
+      {incomeBreakdown.map((inc) => (
+        <div key={inc.name} className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full bg-emerald/10 flex items-center justify-center flex-shrink-0">
+            <span className="text-emerald text-xs font-bold">{inc.name.charAt(0)}</span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex justify-between text-sm mb-1">
+              <span className="text-text-primary font-medium truncate">{inc.name}</span>
+              <span className="text-income font-semibold">Rs. {inc.amount}</span>
+            </div>
+            <div className="w-full bg-bg-slate rounded-full h-1.5">
+              <div className="bg-emerald h-1.5 rounded-full" style={{ width: `${inc.percent}%` }}></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+)}
           <div className="bg-emerald/5 border border-emerald/20 rounded-2xl p-6 card-hover">
             <Lightbulb className="w-8 h-8 text-emerald mb-3" />
             <h3 className="font-semibold text-text-primary mb-2">Stay on Track</h3>

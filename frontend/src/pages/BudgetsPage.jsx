@@ -171,7 +171,7 @@ function BudgetsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-text-primary">Budgets</h1>
+        <h1 className="text-3xl font-extrabold text-text-primary tracking-tight">Budgets</h1>
         <p className="text-text-secondary text-sm mt-1">Set spending limits and track your progress.</p>
       </div>
 
