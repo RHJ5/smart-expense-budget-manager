@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Wallet, ArrowDownCircle, ArrowUpCircle, Target, Calendar, Lightbulb, ArrowRight, UtensilsCrossed, Car, ShoppingBag, Receipt as ReceiptIcon, MoreHorizontal } from 'lucide-react';
 import { PieChart, Pie, Cell, BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import api from '../services/api';
+import { useNavigate } from 'react-router-dom';
 
 const categoryIcons = {
   'Food': UtensilsCrossed,
@@ -17,6 +18,7 @@ function DashboardPage() {
   const [expenseByCategory, setExpenseByCategory] = useState([]);
   const [incomeByCategory, setIncomeByCategory] = useState([]);
   const [error, setError] = useState('');
+  const navigate = useNavigate();
 useEffect(() => {
   const fetchAll = async () => {
     try {
@@ -100,7 +102,7 @@ const incomeBreakdown = incomeByCategory
               </BarChart>
             </ResponsiveContainer>
           ) : (
-            <p className="text-text-muted text-sm">Is mahine koi expense nahi hai</p>
+            <p className="text-text-muted text-sm">No Expense In This Month Till Now</p>
           )}
         </div>
 
@@ -213,9 +215,12 @@ const incomeBreakdown = incomeByCategory
             <p className="text-sm text-text-secondary mb-4">
               {insights.length > 0 ? insights[0] : 'Small savings today create a big difference tomorrow.'}
             </p>
-            <button className="flex items-center gap-2 bg-emerald text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-emerald/90 transition glow-btn">
-              View Insights <ArrowRight className="w-4 h-4" />
-            </button>
+            <button
+  onClick={() => navigate('/analytics')}
+  className="flex items-center gap-2 bg-emerald text-white text-sm font-medium px-4 py-2.5 rounded-xl hover:bg-emerald/90 transition glow-btn cursor-pointer"
+>
+  View Insights <ArrowRight className="w-4 h-4" />
+</button>
           </div>
         </div>
       </div>
