@@ -34,7 +34,15 @@ app.use('/api/users', userRoutes);
 app.get('/api/protected-test', authMiddleware, (req, res) => {
   res.json({ message: 'Aap authenticated hain!', userId: req.userId });
 });
+if (process.env.VERCEL !== '1') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server chal raha hai port ${PORT} par`);
+  });
+}
 
-app.listen(PORT, () => {
+module.exports = app;
+
+
+/*app.listen(PORT, () => {
   console.log(`🚀 Server chal raha hai port ${PORT} par`);
-});
+});*/
